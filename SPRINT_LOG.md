@@ -193,3 +193,7 @@ Audit the project to identify the Python/CLI code that conflicts with the Native
 ## Turn 11 — Steward (2026-05-28 03:44 UTC)
 
 Deleted Python simulation artifacts (time_tracker.py, acceptance_tests.py, main.py) to align workspace with Native iOS architecture.
+
+## Turn 12 — Manager (2026-05-28 03:46 UTC)
+
+The Swift core files (TimeTrackerApp.swift, DataModel.swift) were missing from the project directory. I will create them to establish the app foundation and SwiftData persistence layer.
