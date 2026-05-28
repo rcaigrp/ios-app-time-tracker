@@ -587,3 +587,7 @@ Auditing LocalTrackApp.swift to determine the current ModelContainer initializat
 ## Turn 13 — Craft (2026-05-28 08:16 UTC)
 
 
+
+## Turn 14 — Manager (2026-05-28 08:26 UTC)
+
+
