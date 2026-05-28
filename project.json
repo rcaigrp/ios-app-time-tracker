@@ -1,13 +1,1 @@
-{
-  "goal": "Native iOS app using SwiftUI and SwiftData for time tracking with Jira integration",
-  "acceptance_criteria": [
-    "The application launches cleanly on a simulator and presents a main dashboard with a working timer and project list",
-    "Users can manually create a custom project entry with a name, start and stop the timer, and view elapsed time in a persisted list",
-    "The Settings screen accepts a Jira base URL, username, and API key, stores them securely, and requires them for all API operations",
-    "Automatic project fetching from Jira API works correctly with rate limit handling",
-    "Local storage of logs functions properly"
-  ],
-  "meeting_budget": 5,
-  "meetings_held": 5,
-  "status": "complete"
-}
+{ "goal": "Native iOS app using SwiftUI and SwiftData for time tracking with Jira integration", "acceptance_criteria": [ "The application launches cleanly on a simulator and presents a main dashboard with a working timer and project list", "Users can manually create a custom project entry with a name, start and stop the timer, and view elapsed time in a persisted list", "The Settings screen accepts a Jira base URL, username, and API key, stores them securely, and requires them for all API operations", "Automatic project fetching from Jira API works correctly with rate limit handling", "Local storage of logs functions properly" ], "meeting_budget": 5, "meetings_held": 8, "status": "complete" }
