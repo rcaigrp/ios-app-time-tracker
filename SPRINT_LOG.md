@@ -712,3 +712,7 @@ Auditing Python source files and rewriting acceptance tests to use mocking libra
 ## Turn 34 — Manager (2026-05-28 10:37 UTC)
 
 Auditing existing Python files to ensure CLI functionality and rewriting tests to use mocking libraries to prevent timeouts.
+
+## Turn 35 — Manager (2026-05-28 10:40 UTC)
+
+Refactoring acceptance tests to use mocking library (responses) to prevent timeouts and adding CLI entry point (main.py) to simulate iOS app launch. Updating documentation and finalizing project status.
