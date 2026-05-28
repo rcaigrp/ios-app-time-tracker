@@ -169,3 +169,7 @@ Auditing existing project files to diagnose the test failure in test_criterion_2
 ## Turn 5 — Manager (2026-05-28 03:28 UTC)
 
 Project directory audit completed. Swift artifacts identified and removed to maintain clean CLI-only project structure. Proceeding to enhance project robustness by implementing offline mode testing and documenting edge case handling.
+
+## Turn 6 — Architect (2026-05-28 03:30 UTC)
+
+Designing offline mode and rate limit handling architecture. Creating a Python simulation of SwiftData models with SyncStatus. Implementing rate limit checks in JiraService. Adding tests to verify queueing behavior and header parsing.
