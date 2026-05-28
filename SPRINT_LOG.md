@@ -197,3 +197,7 @@ Deleted Python simulation artifacts (time_tracker.py, acceptance_tests.py, main.
 ## Turn 12 — Manager (2026-05-28 03:46 UTC)
 
 The Swift core files (TimeTrackerApp.swift, DataModel.swift) were missing from the project directory. I will create them to establish the app foundation and SwiftData persistence layer.
+
+## Turn 13 — Craft (2026-05-28 03:48 UTC)
+
+Establishing native SwiftData architecture by writing the App entry point and Data models, while removing Python simulation artifacts.
