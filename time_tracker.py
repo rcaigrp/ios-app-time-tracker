@@ -1,56 +1,61 @@
-import argparse
 import json
 import os
-import sys
-from datetime import datetime
+import click
 
-DATA_FILE = "time_tracker.json"
+DATA_FILE = "projects.json"
 
-def load_data():
+click.group()
+def cli():
+    """Simple CLI to manage time tracker projects."""
+    pass
+
+@cli.command()
+@click.argument('name')
+def new(name):
+    """Create a new time tracker project."""
+    if not name:
+        click.echo("Error: Project name is required.")
+        return
+
+    # Check if file exists
+    projects = []
     if os.path.exists(DATA_FILE):
         try:
-            with open(DATA_FILE, "r") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return {"projects": [], "logs": []}
-    return {"projects": [], "logs": []}
+            with open(DATA_FILE, 'r') as f:
+                projects = json.load(f)
+        except (json.JSONDecodeError, IOError):
+            projects = []
 
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+    # Check for duplicates
+    if any(p['name'] == name for p in projects):
+        click.echo(f"Error: Project '{name}' already exists.")
+        return
 
-def main():
-    parser = argparse.ArgumentParser(description="Jira Time Tracker CLI")
-    parser.add_argument("--start", help="Start timer for project")
-    parser.add_argument("--stop", help="Stop timer")
-    parser.add_argument("--list", action="store_true", help="List logs")
-    parser.add_argument("--config", help="Set Jira URL and Token")
-    parser.add_argument("--sync", action="store_true", help="Sync to Jira")
+    # Add new project
+    projects.append({"name": name, "date": None})
+    
+    # Save to file
+    with open(DATA_FILE, 'w') as f:
+        json.dump(projects, f)
+    
+    click.echo(f"Project '{name}' created successfully.")
 
-    args = parser.parse_args()
+@cli.command()
+def list_projects():
+    """List all existing projects."""
+    if not os.path.exists(DATA_FILE):
+        click.echo("No projects found.")
+        return
 
-    data = load_data()
+    with open(DATA_FILE, 'r') as f:
+        projects = json.load(f)
 
-    if args.start:
-        entry = {"project": args.start, "start": datetime.now().isoformat(), "status": "running"}
-        data["logs"].append(entry)
-        save_data(data)
-        print(f"Timer started for {args.start}")
-    elif args.stop:
-        # Find last running log and stop it
-        for log in reversed(data["logs"]):
-            if log.get("status") == "running":
-                log["end"] = datetime.now().isoformat()
-                log["status"] = "stopped"
-                break
-        save_data(data)
-        print("Timer stopped.")
-    elif args.list:
-        print(json.dumps(data["logs"], indent=2))
-    elif args.config:
-        print(f"Config set for Jira API")
-    elif args.sync:
-        print("Syncing with Jira API...")
+    if not projects:
+        click.echo("No projects found.")
+        return
 
-if __name__ == "__main__":
-    main()
+    for p in projects:
+        click.echo(f"- {p['name']}")
+
+if __name__ == '__main__':
+    cli()

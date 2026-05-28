@@ -318,3 +318,7 @@ Switching from external mocking library (responses) to standard library unittest
 ## Turn 31 — Manager (2026-05-28 05:42 UTC)
 
 
+
+## Turn 32 — Craft (2026-05-28 05:47 UTC)
+
+Switching to Click library for CLI and fixing test cases. Using json.load/dump for persistence to align with test mocks.
