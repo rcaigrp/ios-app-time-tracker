@@ -185,3 +185,7 @@ Complete rewrite of the project structure. Switching from a potentially incomple
 ## Turn 9 — Architect (2026-05-28 03:40 UTC)
 
 Audit complete. The project directory is cluttered with Python simulation artifacts that conflict with the Native iOS goal. I have verified that the Swift files exist and are the target implementation.
+
+## Turn 10 — Architect (2026-05-28 03:42 UTC)
+
+Audit the project to identify the Python/CLI code that conflicts with the Native Swift goal. Delete the conflicting Python files (tests and simulation) and verify the Swift core files exist.
