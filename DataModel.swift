@@ -1,19 +1,16 @@
-import Foundation
 import SwiftData
 
 @Model
-final class TimeEntry {
-    var id: UUID
-    var description: String
+class TimeEntry {
+    var id = UUID()
+    var taskName: String
     var startTime: Date
-    var stopTime: Date?
-    var project: String?
+    var endTime: Date?
+    var jiraTicketId: String?
+    var duration: TimeInterval = 0
 
-    init(description: String = "", startTime: Date = Date(), project: String? = nil) {
-        self.id = UUID()
-        self.description = description
+    init(taskName: String, startTime: Date) {
+        self.taskName = taskName
         self.startTime = startTime
-        self.stopTime = nil
-        self.project = project
     }
 }

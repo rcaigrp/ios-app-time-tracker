@@ -1,40 +1,31 @@
-# ios-app-time-tracker
+# JiraTime
 
-A native iOS application for tracking time spent on development projects.
+A native iOS time tracking application built with SwiftUI and SwiftData.
 
 ## Features
 
-- **Main Dashboard**: Displays active timer and project list
-- **Manual Time Entry**: Create custom project entries with start/stop functionality
-- **Jira Integration**: Settings screen for Jira API credentials (base URL, API token)
-- **Automatic Project Fetching**: Retrieve projects from Jira API
-- **Local Storage**: Persist time logs locally on device
-- **Summary/Export**: Generate reports and export functionality
+- **Dashboard**: Displays active timer and project list.
+- **Manual Entry**: Create custom time entries with start/stop functionality.
+- **Jira Integration**: Settings screen for Jira API credentials (base URL, API token).
+- **Local Storage**: Persist time logs locally on the device using SwiftData.
 
-## Technical Approach
+## Technical Stack
 
-This project simulates an iOS app using Python CLI tools since direct iOS development is not possible in containerized environment. The implementation will focus on core functionality:
+- **Language**: Swift
+- **UI Framework**: SwiftUI
+- **Data Persistence**: SwiftData
+- **Networking**: URLSession (for Jira API integration)
 
-1. Command-line interface for all operations
-2. Mock Jira API integration with rate limiting
-3. Local data storage simulation
-4. Export functionality to CSV/JSON
+## Installation
 
-## Requirements
-
-- Python 3.8+
-- No external dependencies (except standard library)
+1. Clone the repository
+2. Open `JiraTime.xcodeproj` in Xcode
+3. Select a target (iOS Simulator)
+4. Press Play
 
 ## Usage
 
-```bash
-python time_tracker.py --help
-```
-
-## Testing
-
-Run acceptance tests:
-
-```bash
-pytest acceptance_tests.py -v
-```
+1. Launch the app in the simulator.
+2. Navigate to the Dashboard to start the timer.
+3. Use the Manual Entry screen to log time manually.
+4. Go to Settings to configure Jira API credentials.
