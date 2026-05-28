@@ -1,16 +1,24 @@
 import SwiftData
 
 @Model
-class TimeEntry {
+final class TimeEntry {
     var id = UUID()
-    var taskName: String
+    var description: String
     var startTime: Date
     var endTime: Date?
-    var jiraTicketId: String?
-    var duration: TimeInterval = 0
+    var project: Project?
 
-    init(taskName: String, startTime: Date) {
-        self.taskName = taskName
-        self.startTime = startTime
+    var elapsedTime: TimeInterval {
+        if let end = endTime {
+            return end.timeIntervalSince(startTime)
+        }
+        return Date().timeIntervalSince(startTime)
     }
+}
+
+@Model
+final class Project {
+    var id = UUID()
+    var name: String
+    var jiraKey: String?
 }

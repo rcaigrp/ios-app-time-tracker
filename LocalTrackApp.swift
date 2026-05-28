@@ -3,12 +3,10 @@ import SwiftData
 
 @main
 struct JiraTimeApp: App {
-    @Environment(\.@.modelContext) private var modelContext
-    
     var body: some Scene {
         WindowGroup {
             DashboardView()
         }
-        .modelContainer(for: [TimeEntry.self])
+        .modelContainer(for: [TimeEntry.self, Project.self])
     }
 }

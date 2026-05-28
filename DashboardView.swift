@@ -2,71 +2,54 @@ import SwiftUI
 import SwiftData
 
 struct DashboardView: View {
-    @Environment(\.@.modelContext) private var modelContext
-    @Query private var timeEntries: [TimeEntry]
-    
-    @State private var timerRunning = false
-    @State private var elapsedTime = TimeInterval()
-    
-    // TimerManager Integration
-    @StateObject private var timerManager = TimerManager()
-    
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \..startTime, order: .reverse) private var entries: [TimeEntry]
+
+    @State private var timerManager = TimerManager(modelContext: modelContext)
+
     var body: some View {
         NavigationStack {
             List {
-                // Project List
-                ForEach(timeEntries) { entry in
-                    NavigationLink {
-                        // Manual Entry Screen for details
-                        ManualEntryView(entry: entry)
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(entry.taskName)
-                                    .font(.headline)
-                                Text("Started: \(entry.startTime.formatted())")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Text("\(entry.duration, specifier: "%.1f")s")
+                ForEach(entries) { entry in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(entry.description)
+                            Text(entry.elapsedTime.formatted())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                            if entry == entries.first && entry.endTime == nil {
+                                ProgressView()
+                                    .padding(.trailing, 10)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .onTapGesture {
+                        if entry == entries.first && entry.endTime == nil {
+                            timerManager.stopTimer()
                         }
                     }
                 }
-                
-                // Active Timer Section
-                if timerRunning {
-                    HStack {
-                        Text("Timer Running")
-                        Spacer()
-                        Text("\(timerManager.elapsedTime, specifier: "%.1f")s")
-                            .font(.caption)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                }
+                .onDelete(perform: deleteEntries)
             }
             .navigationTitle("JiraTime")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(timerRunning ? "Stop" : "Start") {
-                        if timerRunning {
-                            timerManager.stop()
-                        } else {
-                            timerManager.start()
-                        }
-                        timerRunning = !timerRunning
+                    Button {
+                        timerManager.startTimer()
+                    } label {
+                        Label("Add", systemImage: "plus")
                     }
-                    .disabled(timeEntries.isEmpty)
                 }
             }
         }
     }
-}
 
-#Preview {
-    DashboardView()
-        .modelContainer(for: [TimeEntry.self])
+    private func deleteEntries(offsets: IndexSet) {
+        withAnimation {
+            for index in offsets {
+                modelContext.delete(entries[index])
+            }
+        }
+    }
 }

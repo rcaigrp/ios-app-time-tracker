@@ -334,3 +334,19 @@ Switched from argparse to Click library for more robust CLI parsing and testing 
 ## Turn 1 — Manager (2026-05-28 06:45 UTC)
 
 Auditing project state to understand why tests are failing and what implementation exists.
+
+## Turn 2 — Craft (2026-05-28 07:01 UTC)
+
+
+
+## Turn 3 — Craft (2026-05-28 07:05 UTC)
+
+Switching to direct unit testing of the logic functions (load_data/save_data) to avoid complex CLI mocking. Rewriting the app to be more testable and the tests to be simple assertions on file system state.
+
+## Turn 4 — Architect (2026-05-28 07:09 UTC)
+
+Auditing existing Swift source files to identify gaps against JiraTime requirements. Checking file state before implementation.
+
+## Turn 5 — Architect (2026-05-28 07:16 UTC)
+
+Removing Python remnants and implementing core SwiftData architecture with TimerManager and Dashboard UI.

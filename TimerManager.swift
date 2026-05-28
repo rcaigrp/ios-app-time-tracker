@@ -1,28 +1,27 @@
-import Foundation
 import SwiftData
 
-@Observable
-final class TimerManager {
-    var elapsedTime = TimeInterval()
-    var isRunning = false
-    var timer: Timer?
-    
-    func start() {
-        guard !isRunning else { return }
+@MainActor
+final class TimerManager: ObservableObject {
+    @Published var isRunning = false
+    @Published var currentEntry: TimeEntry?
+
+    let modelContext: ModelContext
+
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
+
+    func startTimer() {
+        let entry = TimeEntry(description: "New Entry", startTime: Date(), modelContext: modelContext)
+        modelContext.insert(entry)
+        currentEntry = entry
         isRunning = true
-        timer = Timer(scheduledIn: .main, repeats: true) { _ in
-            elapsedTime += 1.0
-        }
     }
-    
-    func stop() {
-        timer?.invalidate()
-        timer = nil
+
+    func stopTimer() {
+        guard let entry = currentEntry else { return }
+        entry.endTime = Date()
         isRunning = false
-    }
-    
-    func reset() {
-        stop()
-        elapsedTime = 0
+        currentEntry = nil
     }
 }
