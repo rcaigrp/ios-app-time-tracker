@@ -225,3 +225,52 @@ Recreating acceptance_tests.py which was missing during the repository cleanup
 ## Turn 19 — Manager (2026-05-28 04:23 UTC)
 
 Auditing existing project files to verify acceptance tests and README correctness before proceeding with implementation.
+
+## Turn 20 — Craft (2026-05-28 04:26 UTC)
+
+```json
+{
+  "message": "Reviewing entry points and implementing Dashboard logic for AC1. Fixing LocalTrackApp.swift to be the @main entry point and writing DashboardView.swift with timer and project list functionality.",
+  "insights": [
+    "LocalTrackApp.swift needs to be the @main struct to launch the app",
+    "DashboardView requires a timer state and project list display to meet AC1",
+    "ContentView acts as the root view wrapper for the Dashboard"
+  ],
+  "file_writes": [
+    {
+      "path": "ios-app-time-tracker/Sources/App/LocalTrackApp.swift",
+      "content": "import SwiftUI\nimport SwiftData\n\n@main\nstruct JiraTimeApp: App {\n    @Environment(.modelContext) private var modelContext\n    \n    var body: some Scene {\        WindowGroup {\            ContentView()\        }\n        .modelContainer(for: [TimeEntry.self])\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/Views/DashboardView.swift",
+      "content": "import SwiftUI\nimport SwiftData\n\nstruct DashboardView: View {\n    @Environment(.modelContext) private var modelContext\n    @Query(sort: \\.startTime, order: .reverse) var entries: [TimeEntry]\n    \n    @State private var timerRunning = false\n    @State private var elapsed = Date()\n    @State private var selectedProject = \"General\"\n    \n    var body: some View {\n        NavigationView {\n            VStack(spacing: 20) {\n                // Timer Section\n                VStack {\n                    Text(formatTime(elapsed.timeIntervalSince1970))\n                        .font(.system(size: 42, weight: .bold))\n                    HStack {\n                        Button(timerRunning ? \"Stop\" : \"Start\") {\n                            toggleTimer()\n                        }\n                        .frame(maxWidth: .infinity)\n                        .padding()\n                        .background(timerRunning ? Color.red : Color.green)\n                        .foregroundColor(.white)\n                        .cornerRadius(10)\n                    }\n                }\n                .padding()\n                .background(Color.gray.opacity(0.1))\n                .cornerRadius(12)\n                \n                // Project List Section\n                List {\n                    ForEach([\"JiraTime Core\", \"Backend API\", \"UI/UX Design\"], id: \\^.self) { project in\n                        HStack {\n                            Image(systemName: \"folder.fill\")\n                                .foregroundColor(.blue)\n                            Text(project)\n                            Spacer()\n                            Text(\"2h 30m\")\n                                .foregroundColor(.secondary)\n                                .font(.system(size: 14))\n                        }\n                    }\n                }\n                .navigationTitle(\"Dashboard\")\n                .listStyle(.plain)\n            }\n            .padding()\n        }\n    }\n    \n    func toggleTimer() {\n        if timerRunning {\n            // Stop logic\n            timerRunning = false\n            addEntry()\n        } else {\n            // Start logic\n            timerRunning = true\n            elapsed = Date()\n        }\n    }\n    \n    func addEntry() {\n        let entry = TimeEntry(taskName: selectedProject, startTime: elapsed)\n        modelContext.insert(entry)\n    }\n    \n    func formatTime(_ time: TimeInterval) -> String {\n        let hours = Int(time) / 3600\n        let minutes = Int(time) % 3600 / 60\n        return String(format: \"%.2d:%.2d\", hours, minutes)\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/ContentView.swift",
+      "content": "import SwiftUI\n\nstruct ContentView: View {\n    @Environment(.modelContext) private var modelContext\n    \n    var body: some View {\n        NavigationView {\n            DashboardView()\n                .navigationTitle(\"JiraTime\")\n                .toolbar {\n                    ToolbarItem(placement: .navigationBarTrailing) {\n                        NavigationLink(destination: SettingsView()) {\n                            Image(systemName: \"gear\")\n                        }\n                    }\n                }\n        }\n    }\n}"
+    }
+  ],
+  "file_deletes": [
+    "ios-app-time-tracker/Sources/App/Main.swift"
+  ],
+  "docker_commands": [
+    {
+      "image": "python:3.11-slim",
+      "run": "cd /workspace/projects/ios-app-time-tracker && pip install pytest responses && pytest acceptance_tests.py -v",
+      "workdir": "/workspace",
+      "timeout": 60
+    }
+  ],
+  "web_requests": [],
+  "search_queries": [],
+  "notes": [
+    "Ensuring LocalTrackApp.swift is the @main struct to satisfy Swift entry point requirements",
+    "DashboardView implements start/stop timer and mock project list for AC1",
+    "Removing redundant Main.swift file"
+  ],
+  "vote": {
+    "action": "Run tests to verify Dashboard logic and entry points are correct",
+    "rationale": "Need to confirm the Python tests pass with the new Dashboard implementation"
+  }
+}
+```
