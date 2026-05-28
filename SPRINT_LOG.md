@@ -314,3 +314,7 @@ Rewrote the broken CLI files from scratch. Fixed the 'list_entrie' typo and impl
 ## Turn 30 — Architect (2026-05-28 05:31 UTC)
 
 Switching from external mocking library (responses) to standard library unittest.mock to fix dependency issues. Removing HTTP mocking entirely as the app logic is file-based.
+
+## Turn 31 — Manager (2026-05-28 05:42 UTC)
+
+
