@@ -1121,3 +1121,7 @@ Review confirms all acceptance criteria are met. Python acceptance tests (exit 0
 ## Turn 20 — Manager (2026-05-28 13:23 UTC)
 
 Auditing final project state, verifying README completeness, and preparing for final wrap-up.
+
+## Turn 21 — Manager (2026-05-28 13:25 UTC)
+
+Updating README.md with specific Jira API key generation instructions to ensure the project is fully documented for deployment.

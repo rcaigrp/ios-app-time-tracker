@@ -1,4 +1,4 @@
-# JiraTime (COMPLETED)
+# JiraTime
 
 A native iOS time tracking application built with SwiftUI and SwiftData.
 
@@ -30,6 +30,14 @@ A native iOS time tracking application built with SwiftUI and SwiftData.
 3. Use the Manual Entry screen to log time manually.
 4. Go to Settings to configure Jira API credentials.
 
----
-**Status: COMPLETED**
-**Definition of Done:** All acceptance criteria met, tests passing, README verified.
+## Jira API Setup
+
+To use the Jira integration, you need a Jira API key:
+1. Log in to your Jira account.
+2. Go to **Profile** (top right) -> **API Settings**.
+3. Click **Create API Key**.
+4. Enter a description (e.g., "JiraTime iOS App") and paste into the app's Settings screen.
+
+## Configuration
+
+- No environment variables required; credentials are stored securely in the device's Keychain via KeychainWrapper.
