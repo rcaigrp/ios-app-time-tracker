@@ -1165,3 +1165,7 @@ Project 'ios-app-time-tracker' is complete. All acceptance criteria verified by 
 ## Turn 3 — Narrator (2026-05-28 14:14 UTC)
 
 Project completed. Updated status to 'complete' and wrote final SPRINT_LOG.md.
+
+## Turn 4 — Narrator (2026-05-28 14:17 UTC)
+
+Writing completion status to project.json
