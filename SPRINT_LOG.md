@@ -979,3 +979,7 @@ Implementing LocalTrackApp.swift entry point. Ensuring ModelContainer defines sc
   }
 }
 ```
+
+## Turn 8 — Craft (2026-05-28 11:53 UTC)
+
+
