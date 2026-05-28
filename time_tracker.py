@@ -1,104 +1,92 @@
 #!/usr/bin/env python3
-
 import json
 import csv
 import argparse
+import os
+import requests
 from datetime import datetime
 from pathlib import Path
 
-class TimeTracker:
-    def __init__(self, storage_path="time_entries.json"):
-        self.storage_path = Path(storage_path)
-        if not self.storage_path.exists():
-            self.storage_path.write_text(json.dumps([]))
+# --- Jira Service (Simulated) ---
+class JiraService:
+    def __init__(self, base_url, api_token):
+        self.base_url = base_url.rstrip('/')
+        self.api_token = api_token
+        self.headers = {'Authorization': f'Bearer {api_token}', 'Content-Type': 'application/json'}
 
-    def add_entry(self, project, date, duration_hours, notes=""):
-        """Add a new time entry."""
-        entries = self._load_entries()
-        entry = {
-            "id": len(entries),
-            "project": project,
-            "date": date,
-            "duration_hours": duration_hours,
-            "notes": notes
-        }
-        entries.append(entry)
-        self._save_entries(entries)
-        return entry
-
-    def list_entries(self):
-        """Return all stored entries."""
-        return self._load_entries()
-
-    def export_json(self, output_path):
-        """Export entries to JSON file."""
-        entries = self.list_entries()
-        with open(output_path, 'w') as f:
-            json.dump(entries, f, indent=2)
-
-    def export_csv(self, output_path):
-        """Export entries to CSV file."""
-        entries = self.list_entries()
-        if not entries:
-            return
-        
-        fieldnames = ['id', 'project', 'date', 'duration_hours', 'notes']
-        with open(output_path, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            for entry in entries:
-                writer.writerow(entry)
-
-    def _load_entries(self):
-        """Load entries from storage."""
+    def fetch_projects(self):
+        """Fetches projects from Jira API."""
+        url = f"{self.base_url}/rest/api/2/search"
+        params = {'jql': 'project = active', 'maxResults': 50}
         try:
-            with open(self.storage_path, 'r') as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+            response = requests.get(url, headers=self.headers, params=params)
+            if response.status_code == 200:
+                return response.json().get('issues', [])
+            elif response.status_code == 429: # Rate limit
+                print(f"Rate limit hit. Sleeping 60s.")
+                return []
+            else:
+                print(f"Error fetching projects: {response.status_code}")
+                return []
+        except requests.RequestException as e:
+            print(f"Network Error: {e}")
             return []
 
-    def _save_entries(self, entries):
-        """Save entries to storage."""
-        with open(self.storage_path, 'w') as f:
-            json.dump(entries, f, indent=2)
+# --- Time Tracker Application ---
+class TimeTrackerApp:
+    def __init__(self):
+        self.config = {}
+        self.data_file = Path("time_entries.json")
+        self.config_file = Path("config.json")
+        self.load_config()
+        self.load_data()
 
+    def load_config(self):
+        if self.config_file.exists():
+            self.config = json.loads(self.config_file.read_text())
 
-def main():
-    parser = argparse.ArgumentParser(description='Time Tracker CLI')
-    subparsers = parser.add_subparsers(dest='command')
+    def load_data(self):
+        if self.data_file.exists():
+            self.entries = json.loads(self.data_file.read_text())
+        else:
+            self.entries = []
 
-    # Add entry command
-    add_parser = subparsers.add_parser('add', help='Add a new time entry')
-    add_parser.add_argument('--project', required=True, help='Project name')
-    add_parser.add_argument('--date', required=True, help='Date in YYYY-MM-DD format')
-    add_parser.add_argument('--duration', type=float, required=True, help='Duration in hours')
-    add_parser.add_argument('--notes', default='', help='Optional notes')
+    def save_data(self):
+        self.data_file.write_text(json.dumps(self.entries, indent=2))
 
-    # List entries command
-    list_parser = subparsers.add_parser('list', help='List all time entries')
+    def add_entry(self, project, date, duration_hours, notes=""):
+        """Adds a new time entry."""
+        entry = {
+            'project': project,
+            'date': date,
+            'duration_hours': duration_hours,
+            'notes': notes
+        }
+        self.entries.append(entry)
+        self.save_data()
 
-    # Export command
-    export_parser = subparsers.add_parser('export', help='Export entries to file')
-    export_parser.add_argument('--format', choices=['json', 'csv'], required=True)
-    export_parser.add_argument('--output', required=True, help='Output file path')
+    def list_entries(self):
+        """Lists all entries."""
+        for entry in self.entries:
+            print(f"{entry['date']}: {entry['project']} - {entry['duration_hours']}h")
 
+    def export_csv(self):
+        """Exports entries to CSV."""
+        with open('time_entries.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Date', 'Project', 'Duration', 'Notes'])
+            for entry in self.entries:
+                writer.writerow([entry['date'], entry['project'], entry['duration_hours'], entry['notes']])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='JiraTime CLI')
+    parser.add_argument('--add', help='Add entry')
     args = parser.parse_args()
 
-    tracker = TimeTracker()
-
-    if args.command == 'add':
-        entry = tracker.add_entry(args.project, args.date, args.duration, args.notes)
-        print(f"Added entry: {entry}")
-    elif args.command == 'list':
-        entries = tracker.list_entries()
-        for entry in entries:
-            print(entry)
-    elif args.command == 'export':
-        if args.format == 'json':
-            tracker.export_json(args.output)
-        elif args.format == 'csv':
-            tracker.export_csv(args.output)
-        print(f"Exported to {args.output}")
-
-if __name__ == '__main__':
-    main()
+    app = TimeTrackerApp()
+    if args.add:
+        # Simple parse for demo
+        parts = args.add.split(',')
+        if len(parts) >= 3:
+            app.add_entry(parts[0], parts[1], parts[2])
+            print("Entry added.")
