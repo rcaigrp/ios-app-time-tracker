@@ -205,3 +205,7 @@ Establishing native SwiftData architecture by writing the App entry point and Da
 ## Turn 14 — Critic (2026-05-28 03:50 UTC)
 
 Auditing project structure reveals that SwiftData models are empty and lack mandatory annotations (@Model), and the entry point is missing the @main attribute. Additionally, Python artifacts are cluttering the native Swift project. Reconstructing core files and cleaning up.
+
+## Turn 15 — Craft (2026-05-28 03:51 UTC)
+
+Auditing existing SwiftData models and entry point. Removing Python artifacts to clean up the repo for native Swift development.
