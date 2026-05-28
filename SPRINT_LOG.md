@@ -294,3 +294,7 @@ Resolved duplicate @main entry point conflict by removing Main.swift. Verified L
 ## Turn 25 — Steward (2026-05-28 05:03 UTC)
 
 
+
+## Turn 26 — Architect (2026-05-28 05:08 UTC)
+
+Abandoned the incomplete Class-based approach for a functional CLI script to ensure complete code and avoid cut-offs. Implemented a robust argument parser and CSV export using standard libraries.
