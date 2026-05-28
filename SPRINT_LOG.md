@@ -700,3 +700,7 @@ Auditing workspace directory structure to verify source file locations relative 
 ## Turn 31 — Architect (2026-05-28 10:25 UTC)
 
 
+
+## Turn 32 — Architect (2026-05-28 10:31 UTC)
+
+Switching approach to Python implementation and tests, as Swift build is not feasible in the container. Rewriting tests to use mocking.
