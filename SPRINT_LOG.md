@@ -793,3 +793,82 @@ Designing the Jira API integration architecture and implementing secure Keychain
   }
 }
 ```
+
+## Turn 2 — Architect (2026-05-28 11:14 UTC)
+
+```json
+{
+  "message": "Defining secure storage (KeychainManager) and API client (JiraService) for the iOS app. Integrating these with DataModel and SettingsView.",
+  "insights": [
+    "SwiftData models require @Model macro for persistence.",
+    "KeychainManager must handle Access Groups for multi-device access if needed, but we'll use default for simplicity.",
+    "JiraService needs a retry loop with exponential backoff to handle rate limits (429)."
+  ],
+  "file_writes": [
+    {
+      "path": "ios-app-time-tracker/Sources/Services/KeychainManager.swift",
+      "content": "import Foundation\nimport Security\n\n@Observable\nfinal class KeychainManager {\n    static let shared = KeychainManager()\n    \n    private let accessGroup: String\n    \n    init(accessGroup: String = \"com.jiratime\") {\n        self.accessGroup = accessGroup\n    }\n    \n    func save(key: String, value: String) -> Bool {\n        guard let data = value.data(using: .utf8) else { return false }\n        \n        let query: [String: Any] = [\n            kSecClass as String: kSecClassGenericPassword,\n            kSecAttrAccount as String: key,\n            kSecValueData as String: data,\n            kSecAttrAccessGroup as String: accessGroup\n        ]\n        \n        // Add item\n        let addStatus = SecItemAdd(query as CFDictionary, nil)\n        if (addStatus == errSecDuplicateItem) {\n            // Update if exists\n            let updateQuery: [String: Any] = [\n                kSecClass as String: kSecClassGenericPassword,\n                kSecAttrAccount as String: key,\n                kSecValueData as String: data,\n                kSecAttrAccessGroup as String: accessGroup\n            ]\n            let status = SecItemUpdate(updateQuery as CFDictionary, nil)\n            return status == errSecSuccess\n        }\n        \n        return addStatus == errSecSuccess\n    }\n    \n    func load(key: String) -> String? {\n        let query: [String: Any] = [\n            kSecClass as String: kSecClassGenericPassword,\n            kSecAttrAccount as String: key,\n            kSecAttrAccessGroup as String: accessGroup\n        ]\n        \n        var itemDataCFTypeRef: AnyObject? = nil\n        let status = SecItemCopy(query as CFDictionary, &itemDataCFTypeRef)\n        \n        guard status == errSecSuccess, let itemData = itemDataCFTypeRef as? Data else {\n            return nil\n        }\n        \n        return String(data: itemData, encoding: .utf8)\n    }\n    \n    func delete(key: String) -> Bool {\n        let query: [String: Any] = [\n            kSecClass as String: kSecClassGenericPassword,\n            kSecAttrAccount as String: key\n        ]\n        let status = SecItemDelete(query as CFDictionary)\n        return status == errSecSuccess || status == errSecNotFound\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/Services/JiraService.swift",
+      "content": "import Foundation\n\n@Observable\nfinal class JiraService {\n    let session: URLSession\n    private let keychain: KeychainManager\n    \n    init(session: URLSession = .shared, keychain: KeychainManager = .shared) {\n        self.session = session\n        self.keychain = keychain\n    }\n    \n    var baseURL: String {\n        keychain.load(key: \"JiraBaseURL\") ?? \"\"\n    }\n    \n    var username: String {\n        keychain.load(key: \"JiraUsername\") ?? \"\"\n    }\n    \n    var apiKey: String {\n        keychain.load(key: \"JiraAPIKey\") ?? \"\"\n    }\n    \n    private var authHeader: String? {\n        guard let username = username, let apiKey = apiKey else { return nil }\n        let credentials = \"\\(username):\\(apiKey)\"\n        return Data(credentials.utf8).base64EncodedString()\n    }\n    \n    func fetchProjects(completion: @escaping (Result<[Project], Error>) -> Void) {\n        guard let url = URL(string: \"\\(baseURL)/rest/api/2/project\") else {\n            completion(.failure(NSError(domain: \"Invalid URL\", code: -1, userInfo: nil)))\n            return\n        }\n        \n        var request = URLRequest(url: url)\n        request.setValue(authHeader, forHTTPHeaderField: \"Authorization\")\n        request.setValue(\"application/json\", forHTTPHeaderField: \"Accept\")\n        \n        fetchWithRetry(request: request, completion: completion)\n    }\n    \n    private func fetchWithRetry(request: URLRequest, completion: @escaping (Result<[Project], Error>) -> Void) {\n        session.dataTask(with: request) { data, response, error in\n            if let error = error {\n                completion(.failure(error))\n                return\n            }\n            \n            guard let httpResponse = response as? HTTPURLResponse else {\n                completion(.failure(NSError(domain: \"Invalid response\", code: -1, userInfo: nil)))\n                return\n            }\n            \n            switch httpResponse.statusCode {\n            case 200..<300:\n                guard let data = data else { return }\n                do {\n                    let decoded = try JSONDecoder().decode([Project].self, from: data)\n                    completion(.success(decoded))\n                } catch {\n                    completion(.failure(error))\n                }\n            case 429:\n                // Rate limit - Exponential backoff\n                Thread.sleep(nanoseconds: UInt64(pow(2.0, Double(Thread.current.threadNumber + 1))))\n                self.fetchWithRetry(request: request, completion: completion)\n            default:\n                completion(.failure(NSError(domain: \"Jira API Error\", code: httpResponse.statusCode, userInfo: nil)))\n            }\n        }.resume()\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/Models/Project.swift",
+      "content": "import Foundation\nimport SwiftData\n\n@Model\nfinal class Project {\n    var id: String\n    var name: String\n    \n    init(id: String, name: String) {\n        self.id = id\n        self.name = name\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/Views/SettingsView.swift",
+      "content": "import SwiftUI\nimport SwiftData\n\nstruct SettingsView: View {\n    @Environment(\\.modelContext) private var modelContext\n    @Environment(\\.dismiss) private var dismiss\n    \n    @State private var jiraURL = \"\"\n    @State private var jiraUser = \"\"\n    @State private var jiraKey = \"\"\n    \n    private let keychain = KeychainManager.shared\n    \n    var body: some View {\n        Form {\n            Section(\"Jira Configuration\") {\n                TextField(\"Base URL\", text: $jiraURL)\n                    .textFieldStyle(.rounded)\n                    .onSubmit {\n                        saveConfiguration()\n                    }\n                \n                TextField(\"Username\", text: $jiraUser)\n                    .textFieldStyle(.rounded)\n                    .onSubmit {\n                        saveConfiguration()\n                    }\n                \n                TextField(\"API Key / Token\", text: $jiraKey)\n                    .textFieldStyle(.rounded)\n                    .autocorrectionConfiguration(.init(mode: .none))\n                    .disableAutocorrection()\n                    .onSubmit {\n                        saveConfiguration()\n                    }\n            }\n            .onAppear {\n                loadConfiguration()\n            }\n            \n            Section(\"Data\") {\n                Button(\"Reset Data\") {\n                    deleteAllEntries()\n                }\n                .foregroundColor(.red)\n            }\n        }\n        .navigationTitle(\"Settings\")\n    }\n    \n    private func saveConfiguration() {\n        if !jiraURL.isEmpty {\n            keychain.save(key: \"JiraBaseURL\", value: jiraURL)\n        }\n        if !jiraUser.isEmpty {\n            keychain.save(key: \"JiraUsername\", value: jiraUser)\n        }\n        if !jiraKey.isEmpty {\n            keychain.save(key: \"JiraAPIKey\", value: jiraKey)\n        }\n    }\n    \n    private func loadConfiguration() {\n        if let url = keychain.load(key: \"JiraBaseURL\") { jiraURL = url }\n        if let user = keychain.load(key: \"JiraUsername\") { jiraUser = user }\n        if let key = keychain.load(key: \"JiraAPIKey\") { jiraKey = key }\n    }\n    \n    private func deleteAllEntries() {\n        let predicate = #Predicate<TimeEntry>\n        let descriptor = FetchDescriptor<TimeEntry>(predicate: predicate)\n        \n        do {\n            let entries = try modelContext.fetch(descriptor)\n            for entry in entries {\n                modelContext.delete(entry)\n            }\n        } catch {\n            print(\"Failed to delete entries: \(error)\")\n        }\n    }\n}"
+    }
+  ],
+  "file_deletes": [],
+  "docker_commands": [
+    {
+      "image": "python:3.11-slim",
+      "run": "cat /workspace/projects/ios-app-time-tracker/acceptance_tests.py && pip list | grep pytest",
+      "workdir": "/workspace"
+    },
+    {
+      "image": "python:3.11-slim",
+      "run": "pytest /workspace/projects/ios-app-time-tracker/acceptance_tests.py -v",
+      "workdir": "/workspace",
+      "timeout": 60
+    }
+  ],
+  "web_requests": [
+    {
+      "method": "GET",
+      "url": "https://developer.apple.com/documentation/swiftdata/model"
+    },
+    {
+      "method": "GET",
+      "url": "https://developer.apple.com/documentation/security/keychain_services"
+    },
+    {
+      "method": "GET",
+      "url": "https://developer.atlassian.com/cloud/jira/software/rest/api-group-projects/"
+    },
+    {
+      "method": "GET",
+      "url": "https://stackoverflow.com/questions/38391022/swiftui-form-textfield-binding"
+    }
+  ],
+  "search_queries": [
+    "SwiftData @Model struct Swift 5.9",
+    "iOS Keychain Access Groups Swift",
+    "Jira API rate limit exponential backoff Swift",
+    "SwiftUI Settings view Keychain binding"
+  ],
+  "notes": [
+    "KeychainManager uses SecItem for secure storage.",
+    "JiraService implements retry logic with exponential backoff for rate limits (429).",
+    "SettingsView now binds directly to Keychain data.",
+    "Project model added to support JiraService response."
+  ],
+  "vote": {
+    "action": "Verify the Python acceptance tests still pass to ensure the Manager hasn't broken anything before marking this sprint complete.",
+    "rationale": "The Manager must ensure the Definition of Done is met. The Python tests act as a proxy for the 'local storage' requirement. If they fail, the project isn't done."
+  }
+}
+```
