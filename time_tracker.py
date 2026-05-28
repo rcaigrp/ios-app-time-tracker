@@ -1,67 +1,79 @@
 import argparse
-import sys
-import os
 import json
+import os
+import sys
+import requests
 from datetime import datetime
 
-# Add current directory to path to import modules if needed
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# --- Configuration ---
+DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'time_entries.json')
 
-def fetch_projects(jira_url, api_token):
-    '''Simulates fetching projects from Jira API.'''
-    # In a real app, this would use requests
-    return [
-        {"id": "PROJ-1", "name": "Project A"},
-        {"id": "PROJ-2", "name": "Project B"}
-    ]
+# --- Data Management ---
+class DataStore:
+    def __init__(self):
+        self._data = []
+        self.load()
 
-def save_to_local_storage(entries):
-    '''Saves time entries to a local file.'''
-    filename = 'time_entries.json'
-    with open(filename, 'w') as f:
-        json.dump(entries, f)
-    print(f"Saved {len(entries)} entries to {filename}")
+    def load(self):
+        if os.path.exists(DATA_FILE):
+            try:
+                with open(DATA_FILE, 'r') as f:
+                    self._data = json.load(f)
+            except json.JSONDecodeError:
+                print("Warning: Corrupted data file, starting fresh.")
+                self._data = []
+        return self._data
 
-def load_from_local_storage():
-    '''Loads time entries from local storage.'''
-    filename = 'time_entries.json'
-    if os.path.exists(filename):
-        with open(filename, 'r') as f:
-            return json.load(f)
-    return []
+    def save(self):
+        with open(DATA_FILE, 'w') as f:
+            json.dump(self._data, f, indent=2)
 
+    def add_entry(self, project, description, duration):
+        entry = {
+            "id": len(self._data) + 1,
+            "project": project,
+            "description": description,
+            "duration": duration,
+            "date": datetime.now().isoformat()
+        }
+        self._data.append(entry)
+        self.save()
+        print(f"[SUCCESS] Entry added: {project} ({duration}h)")
+
+    def list_entries(self):
+        if not self._data:
+            print("No time entries found.")
+            return
+        print("\nID\tProject\tDescription\tDuration\tDate")
+        print("-" * 60)
+        for entry in self._data:
+            print(f"{entry['id']}\t{entry['project']}\t{entry['description']}\t{entry['duration']}\t{entry['date']}")
+
+# --- CLI Logic ---
 def main():
     parser = argparse.ArgumentParser(description='Jira Time Tracker CLI')
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(dest='command', required=True)
 
-    # 'sync' command
-    sync_parser = subparsers.add_parser('sync')
-    sync_parser.add_argument('--url', required=True, help='Jira Base URL')
-    sync_parser.add_argument('--token', required=True, help='Jira API Token')
+    # Add Command
+    add_parser = subparsers.add_parser('add', help='Add a time entry')
+    add_parser.add_argument('project', help='Project name')
+    add_parser.add_argument('--description', default='No description', help='Description')
+    add_parser.add_argument('--duration', required=True, help='Duration in hours')
+    add_parser.set_defaults(func=lambda args: DataStore().add_entry(args.project, args.description, args.duration))
 
-    # 'add' command
-    add_parser = subparsers.add_parser('add')
-    add_parser.add_argument('--project', required=True, help='Project Name')
-    add_parser.add_argument('--time', type=float, required=True, help='Time in seconds')
+    # List Command
+    list_parser = subparsers.add_parser('list', help='List all entries')
+    list_parser.set_defaults(func=lambda args: DataStore().list_entries())
+
+    # Sync Command
+    sync_parser = subparsers.add_parser('sync', help='Sync projects from Jira API')
+    sync_parser.set_defaults(func=lambda args: DataStore().sync_projects())
 
     args = parser.parse_args()
-
-    if args.command == 'sync':
-        print(f"Syncing with Jira at {args.url}...")
-        projects = fetch_projects(args.url, args.token)
-        print(f"Fetched {len(projects)} projects")
-        save_to_local_storage([]) # Simulate saving sync result
-
-    elif args.command == 'add':
-        entry = {
-            'project': args.project,
-            'time': args.time,
-            'timestamp': datetime.now().isoformat()
-        }
-        entries = load_from_local_storage()
-        entries.append(entry)
-        save_to_local_storage(entries)
-        print(f"Added entry: {args.project} ({args.time}s)")
+    if hasattr(args, 'func'):
+        args.func(args)
+    else:
+        parser.print_help()
 
 if __name__ == '__main__':
     main()

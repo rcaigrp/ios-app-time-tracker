@@ -306,3 +306,7 @@ Abandoned the incomplete Class-based approach for a functional CLI script to ens
 ## Turn 28 — Architect (2026-05-28 05:22 UTC)
 
 Auditing source files to diagnose the syntax error in time_tracker.py and acceptance_tests.py
+
+## Turn 29 — Architect (2026-05-28 05:26 UTC)
+
+Rewrote the broken CLI files from scratch. Fixed the 'list_entrie' typo and implemented a complete, class-based argument parser with proper JSON handling. Ensured the sync command triggers the API logic.
