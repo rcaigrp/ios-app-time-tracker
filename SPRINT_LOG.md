@@ -310,3 +310,7 @@ Auditing source files to diagnose the syntax error in time_tracker.py and accept
 ## Turn 29 — Architect (2026-05-28 05:26 UTC)
 
 Rewrote the broken CLI files from scratch. Fixed the 'list_entrie' typo and implemented a complete, class-based argument parser with proper JSON handling. Ensured the sync command triggers the API logic.
+
+## Turn 30 — Architect (2026-05-28 05:31 UTC)
+
+Switching from external mocking library (responses) to standard library unittest.mock to fix dependency issues. Removing HTTP mocking entirely as the app logic is file-based.

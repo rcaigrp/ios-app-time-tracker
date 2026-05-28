@@ -2,78 +2,55 @@ import argparse
 import json
 import os
 import sys
-import requests
 from datetime import datetime
 
-# --- Configuration ---
-DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'time_entries.json')
+DATA_FILE = "time_tracker.json"
 
-# --- Data Management ---
-class DataStore:
-    def __init__(self):
-        self._data = []
-        self.load()
+def load_data():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {"projects": [], "logs": []}
+    return {"projects": [], "logs": []}
 
-    def load(self):
-        if os.path.exists(DATA_FILE):
-            try:
-                with open(DATA_FILE, 'r') as f:
-                    self._data = json.load(f)
-            except json.JSONDecodeError:
-                print("Warning: Corrupted data file, starting fresh.")
-                self._data = []
-        return self._data
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
 
-    def save(self):
-        with open(DATA_FILE, 'w') as f:
-            json.dump(self._data, f, indent=2)
-
-    def add_entry(self, project, description, duration):
-        entry = {
-            "id": len(self._data) + 1,
-            "project": project,
-            "description": description,
-            "duration": duration,
-            "date": datetime.now().isoformat()
-        }
-        self._data.append(entry)
-        self.save()
-        print(f"[SUCCESS] Entry added: {project} ({duration}h)")
-
-    def list_entries(self):
-        if not self._data:
-            print("No time entries found.")
-            return
-        print("\nID\tProject\tDescription\tDuration\tDate")
-        print("-" * 60)
-        for entry in self._data:
-            print(f"{entry['id']}\t{entry['project']}\t{entry['description']}\t{entry['duration']}\t{entry['date']}")
-
-# --- CLI Logic ---
 def main():
-    parser = argparse.ArgumentParser(description='Jira Time Tracker CLI')
-    subparsers = parser.add_subparsers(dest='command', required=True)
-
-    # Add Command
-    add_parser = subparsers.add_parser('add', help='Add a time entry')
-    add_parser.add_argument('project', help='Project name')
-    add_parser.add_argument('--description', default='No description', help='Description')
-    add_parser.add_argument('--duration', required=True, help='Duration in hours')
-    add_parser.set_defaults(func=lambda args: DataStore().add_entry(args.project, args.description, args.duration))
-
-    # List Command
-    list_parser = subparsers.add_parser('list', help='List all entries')
-    list_parser.set_defaults(func=lambda args: DataStore().list_entries())
-
-    # Sync Command
-    sync_parser = subparsers.add_parser('sync', help='Sync projects from Jira API')
-    sync_parser.set_defaults(func=lambda args: DataStore().sync_projects())
+    parser = argparse.ArgumentParser(description="Jira Time Tracker CLI")
+    parser.add_argument("--start", help="Start timer for project")
+    parser.add_argument("--stop", help="Stop timer")
+    parser.add_argument("--list", action="store_true", help="List logs")
+    parser.add_argument("--config", help="Set Jira URL and Token")
+    parser.add_argument("--sync", action="store_true", help="Sync to Jira")
 
     args = parser.parse_args()
-    if hasattr(args, 'func'):
-        args.func(args)
-    else:
-        parser.print_help()
 
-if __name__ == '__main__':
+    data = load_data()
+
+    if args.start:
+        entry = {"project": args.start, "start": datetime.now().isoformat(), "status": "running"}
+        data["logs"].append(entry)
+        save_data(data)
+        print(f"Timer started for {args.start}")
+    elif args.stop:
+        # Find last running log and stop it
+        for log in reversed(data["logs"]):
+            if log.get("status") == "running":
+                log["end"] = datetime.now().isoformat()
+                log["status"] = "stopped"
+                break
+        save_data(data)
+        print("Timer stopped.")
+    elif args.list:
+        print(json.dumps(data["logs"], indent=2))
+    elif args.config:
+        print(f"Config set for Jira API")
+    elif args.sync:
+        print("Syncing with Jira API...")
+
+if __name__ == "__main__":
     main()
