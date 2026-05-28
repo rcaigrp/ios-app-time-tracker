@@ -732,3 +732,7 @@ Auditing Swift source files. Checking for compilation errors and ensuring the iO
 ## Turn 39 — Craft (2026-05-28 11:03 UTC)
 
 Replacing placeholder Swift files with complete, functional implementations of DataModel, TimerManager, and DashboardView to satisfy Criterion 1 (Clean Launch and Working Timer).
+
+## Turn 40 — Architect (2026-05-28 11:07 UTC)
+
+Designing the Jira API integration architecture and implementing secure Keychain storage for credentials.
