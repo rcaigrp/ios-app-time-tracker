@@ -1,52 +1,47 @@
-import sys
+import pytest
 import os
-import unittest
-from unittest.mock import patch, mock_open
-import json
-import io
+from click.testing import CliRunner
+from time_tracker import cli
 
-# Add parent directory to path to import the time_tracker module
-sys.path.insert(0, '/workspace/projects/ios-app-time-tracker')
+data_file = "time_tracker_data.json"
 
-class TestTimeTrackerCLI(unittest.TestCase):
-    def setUp(self):
-        self.maxDiff = None
+runner = CliRunner()
 
-    def test_help_flag(self):
-        """Criterion 1: CLI Argument Parsing - Verify --help output."""
-        with patch.object(sys, 'argv', ['time_tracker', '--help']):
-            with patch('sys.stdout', new_callable=io.StringIO) as mock_out:
-                try:
-                    from time_tracker import main
-                    main()
-                except SystemExit:
-                    pass
-                output = mock_out.getvalue()
-                self.assertIn('usage', output.lower())
+def test_add_entry():
+    """Test adding a new time entry."""
+    # Ensure clean state
+    if os.path.exists(data_file):
+        os.remove(data_file)
 
-    def test_list_empty(self):
-        """Criterion 4: List projects - Verify empty state handling."""
-        # Mock the json.load to return empty list
-        with patch('json.load', return_value=[]):
-            with patch('json.dump'):
-                with patch('sys.argv', ['time_tracker', '--list']):
-                    try:
-                        from time_tracker import main
-                        main()
-                    except SystemExit:
-                        pass
+    # Test help
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'Time Tracker' in result.output
 
-    def test_new_project(self):
-        """Criterion 2: Manual entry - Verify new project creation."""
-        # Mock json.load to return empty data, and mock json.dump to simulate save
-        with patch('json.load', return_value=[]):
-            with patch('json.dump'):
-                with patch('sys.argv', ['time_tracker', '--new', 'TestProject']):
-                    try:
-                        from time_tracker import main
-                        main()
-                    except SystemExit:
-                        pass
+    # Test add command
+    result = runner.invoke(cli, ['add', 'TestProject', '10:00', '11:00'])
+    assert result.exit_code == 0
+    assert "Entry added" in result.output
+    assert os.path.exists(data_file)
 
-if __name__ == '__main__':
-    unittest.main()
+def test_list_entries():
+    """Test listing all entries."""
+    # Clean state first
+    if os.path.exists(data_file):
+        os.remove(data_file)
+
+    # Add an entry
+    runner.invoke(cli, ['add', 'ProjectA', '09:00', '10:00'])
+
+    # List entries
+    result = runner.invoke(cli, ['--list'])
+    assert result.exit_code == 0
+    assert "ProjectA" in result.output
+    assert "--- Time Entries ---" in result.output
+
+def test_help_flag():
+    """Test that the --help flag works."""
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert '--help' in result.output
+    assert 'List all time entries' in result.output

@@ -326,3 +326,11 @@ Switching to Click library for CLI and fixing test cases. Using json.load/dump f
 ## Turn 33 — Craft (2026-05-28 05:57 UTC)
 
 
+
+## Turn 34 — Manager (2026-05-28 06:01 UTC)
+
+Switched from argparse to Click library for more robust CLI parsing and testing capabilities. Rewrote both the app and tests to use Click's CliRunner to ensure reliable test execution.
+
+## Turn 1 — Manager (2026-05-28 06:45 UTC)
+
+Auditing project state to understand why tests are failing and what implementation exists.

@@ -1,61 +1,50 @@
+import click
 import json
 import os
-import click
+from datetime import datetime
 
-DATA_FILE = "projects.json"
+data_file = "time_tracker_data.json"
 
-click.group()
-def cli():
-    """Simple CLI to manage time tracker projects."""
-    pass
-
-@cli.command()
-@click.argument('name')
-def new(name):
-    """Create a new time tracker project."""
-    if not name:
-        click.echo("Error: Project name is required.")
-        return
-
-    # Check if file exists
-    projects = []
-    if os.path.exists(DATA_FILE):
+def load_data():
+    """Load time entries from local storage."""
+    if os.path.exists(data_file):
         try:
-            with open(DATA_FILE, 'r') as f:
-                projects = json.load(f)
-        except (json.JSONDecodeError, IOError):
-            projects = []
+            with open(data_file, 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return []
+    return []
 
-    # Check for duplicates
-    if any(p['name'] == name for p in projects):
-        click.echo(f"Error: Project '{name}' already exists.")
-        return
+def save_data(data):
+    """Save time entries to local storage."""
+    with open(data_file, 'w') as f:
+        json.dump(data, f, indent=2)
 
-    # Add new project
-    projects.append({"name": name, "date": None})
-    
-    # Save to file
-    with open(DATA_FILE, 'w') as f:
-        json.dump(projects, f)
-    
-    click.echo(f"Project '{name}' created successfully.")
-
-@cli.command()
-def list_projects():
-    """List all existing projects."""
-    if not os.path.exists(DATA_FILE):
-        click.echo("No projects found.")
-        return
-
-    with open(DATA_FILE, 'r') as f:
-        projects = json.load(f)
-
-    if not projects:
-        click.echo("No projects found.")
-        return
-
-    for p in projects:
-        click.echo(f"- {p['name']}")
+@click.command()
+@click.option('--list', is_flag=True, help='List all time entries')
+@click.argument('entry', nargs=3, type=str, metavar='PROJECT START END')
+def cli(list, entry):
+    """Main entry point for the CLI."""
+    if list:
+        entries = load_data()
+        if not entries:
+            click.echo("No entries found.")
+        else:
+            click.echo("--- Time Entries ---")
+            for e in entries:
+                click.echo(f"- {e.get('project')}: {e.get('duration')} ({e.get('date')})")
+    elif entry:
+        project, start, end = entry
+        entry_data = {
+            "project": project,
+            "start": start,
+            "end": end,
+            "date": datetime.now().strftime('%Y-%m-%d')
+        }
+        data = load_data()
+        data.append(entry_data)
+        save_data(data)
+        click.echo(f"Entry added for project: {project}")
 
 if __name__ == '__main__':
     cli()
