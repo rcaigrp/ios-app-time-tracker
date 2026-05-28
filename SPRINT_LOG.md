@@ -926,3 +926,56 @@ Implementing LocalTrackApp.swift entry point. Ensuring ModelContainer defines sc
   }
 }
 ```
+
+## Turn 7 — Critic (2026-05-28 11:43 UTC)
+
+```json
+{
+  "message": "Auditing SwiftData models and dependency injection. Verifying @Model annotations and ModelContext lifecycle.",
+  "insights": [
+    "DataModel.swift requires @Model annotation on the TimeEntry class to enable persistence.",
+    "TimerManager.swift requires explicit ModelContext injection to save TimeEntry objects to the persistent store.",
+    "DashboardView must receive modelContext from the App scene to pass to TimerManager."
+  ],
+  "file_writes": [
+    {
+      "path": "ios-app-time-tracker/Sources/Models/DataModel.swift",
+      "content": "import SwiftData\n\n@Model\nclass TimeEntry {\n    var id = UUID()\n    var title: String\n    var startTime: Date\n    var endTime: Date?\n    var duration: TimeInterval?\n\n    init(title: String, startTime: Date) {\n        self.title = title\n        self.startTime = startTime\n        self.endTime = nil\n        self.duration = nil\n    }\n}"
+    },
+    {
+      "path": "ios-app-time-tracker/Sources/Services/TimerManager.swift",
+      "content": "import SwiftData\nimport SwiftUI\n\nclass TimerManager {\n    var modelContext: ModelContext\n    var timer: Timer?\n    var startTime: Date?\n\n    init(modelContext: ModelContext) {\n        self.modelContext = modelContext\n    }\n\n    func startTimer() {\n        startTime = Date()\n    }\n\n    func stopTimer() {\n        guard let start = startTime else { return }\n        let entry = TimeEntry(title: \"Work Session\", startTime: start)\n        modelContext.insert(entry)\n        do {\n            try modelContext.save()\n            print(\"[TimerManager] Entry saved: \(entry.id)\")\n        } catch let error {\n            print(\"[TimerManager] Failed to save: \(error)\")\n        }\n        timer?.invalidate()\n        timer = nil\n        startTime = nil\n    }\n}"
+    }
+  ],
+  "docker_commands": [
+    {
+      "image": "alpine:latest",
+      "run": "ls -la /workspace/projects/ios-app-time-tracker/Sources/Models/ && ls -la /workspace/projects/ios-app-time-tracker/Sources/Services/",
+      "workdir": "/workspace",
+      "timeout": 10
+    }
+  ],
+  "web_requests": [
+    {
+      "url": "https://developer.apple.com/documentation/swiftdata/model",
+      "method": "GET"
+    },
+    {
+      "url": "https://developer.apple.com/documentation/swiftui/modelcontext",
+      "method": "GET"
+    }
+  ],
+  "search_queries": [
+    "SwiftData @Model class struct syntax",
+    "SwiftUI TimerManager ModelContext injection"
+  ],
+  "notes": [
+    "DataModel defines the TimeEntry schema. TimerManager injects this context to perform save operations.",
+    "DashboardView is already wired to inject modelContext, so the timer should work in the app flow."
+  ],
+  "vote": {
+    "action": "Commit the Model and TimerManager fixes. Run final app check.",
+    "rationale": "Code now adheres to SwiftData best practices with proper annotations and dependency injection."
+  }
+}
+```
