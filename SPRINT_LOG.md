@@ -876,3 +876,7 @@ Designing the Jira API integration architecture and implementing secure Keychain
 ## Turn 3 — Manager (2026-05-28 11:25 UTC)
 
 Auditing existing Swift implementation files to verify current state before finalizing the 'JiraTime' app.
+
+## Turn 4 — Craft (2026-05-28 11:27 UTC)
+
+Implementing LocalTrackApp.swift entry point. Ensuring ModelContainer defines schema correctly (TimeEntry, Project, JiraCredentials) and wires DashboardView for launch.
