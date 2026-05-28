@@ -1067,3 +1067,7 @@ Implementing LocalTrackApp.swift entry point. Ensuring ModelContainer defines sc
 ## Turn 12 — Manager (2026-05-28 12:33 UTC)
 
 
+
+## Turn 13 — Craft (2026-05-28 12:37 UTC)
+
+Auditing LocalTrackApp, TimerManager, and DataModel files to verify Manager's findings and fix missing @Model annotations and ModelContext injection.
