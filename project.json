@@ -7,7 +7,7 @@
     "Automatic project fetching from Jira API works correctly with rate limit handling",
     "Local storage of logs functions properly"
   ],
-  "meeting_budget": 5,
+  "meeting_budget": 3,
   "meetings_held": 3,
   "status": "complete"
 }

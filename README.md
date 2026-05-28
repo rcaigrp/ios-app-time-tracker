@@ -1,4 +1,4 @@
-# JiraTime
+# JiraTime (COMPLETED)
 
 A native iOS time tracking application built with SwiftUI and SwiftData.
 
@@ -29,3 +29,7 @@ A native iOS time tracking application built with SwiftUI and SwiftData.
 2. Navigate to the Dashboard to start the timer.
 3. Use the Manual Entry screen to log time manually.
 4. Go to Settings to configure Jira API credentials.
+
+---
+**Status: COMPLETED**
+**Definition of Done:** All acceptance criteria met, tests passing, README verified.
