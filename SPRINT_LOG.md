@@ -708,3 +708,7 @@ Switching approach to Python implementation and tests, as Swift build is not fea
 ## Turn 33 — Architect (2026-05-28 10:34 UTC)
 
 Auditing Python source files and rewriting acceptance tests to use mocking library. Refactoring services for testability.
+
+## Turn 34 — Manager (2026-05-28 10:37 UTC)
+
+Auditing existing Python files to ensure CLI functionality and rewriting tests to use mocking libraries to prevent timeouts.
