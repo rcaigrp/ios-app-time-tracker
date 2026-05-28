@@ -201,3 +201,7 @@ The Swift core files (TimeTrackerApp.swift, DataModel.swift) were missing from t
 ## Turn 13 — Craft (2026-05-28 03:48 UTC)
 
 Establishing native SwiftData architecture by writing the App entry point and Data models, while removing Python simulation artifacts.
+
+## Turn 14 — Critic (2026-05-28 03:50 UTC)
+
+Auditing project structure reveals that SwiftData models are empty and lack mandatory annotations (@Model), and the entry point is missing the @main attribute. Additionally, Python artifacts are cluttering the native Swift project. Reconstructing core files and cleaning up.
